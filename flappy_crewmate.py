@@ -1,5 +1,6 @@
 # Space background source: https://www.reddit.com/r/AmongUs/comments/j5vd1v/the_among_us_space_background_with_no_people_in_it/
 # Crewmate designs source: https://www.reddit.com/r/AmongUs/comments/iut5y2/couldnt_find_many_pngs_of_the_among_us_characters/
+# Sound effects source: https://www.sounds-resource.com/pc_computer/amongus/
 
 import pygame
 from pygame.locals import *
@@ -40,6 +41,10 @@ ground_img = pygame.image.load('img/rsz_cafeteria.jpg')
 ground_img = pygame.transform.scale(ground_img, (int(screen_width), int(168)))
 button_img = pygame.image.load('img/restart.png')
 
+# load sound
+pygame.mixer.music.load('sound/AMB_Reactor.wav')
+pygame.mixer.music.play(-1)
+
 
 #function for outputting text onto the screen
 def draw_text(text, font, text_col, x, y):
@@ -63,7 +68,7 @@ class Bird(pygame.sprite.Sprite):
 		self.counter = 0
 		for num in range (1, 4):
 			img = pygame.image.load("img/red.png")
-			img = pygame.transform.scale(img, (int(screen_width/15), int(screen_height/15)))
+			img = pygame.transform.scale(img, (int(screen_width/13), int(screen_height/13)))
 			self.images.append(img)
 		self.image = self.images[self.index]
 		self.rect = self.image.get_rect()
