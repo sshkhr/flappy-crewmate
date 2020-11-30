@@ -5,6 +5,8 @@
 import pygame
 from pygame.locals import *
 import random
+import glob
+import time
 
 pygame.init()
 
@@ -37,13 +39,19 @@ pass_pipe = False
 
 #load images
 bg = pygame.image.load('img/space.jpg')
-ground_img = pygame.image.load('img/rsz_cafeteria.jpg')
+ground_img = pygame.image.load('img/ground.png')
 ground_img = pygame.transform.scale(ground_img, (int(screen_width), int(168)))
 button_img = pygame.image.load('img/restart.png')
 
 # load sound
-pygame.mixer.music.load('sound/AMB_Reactor.wav')
+pygame.mixer.music.load('sound/AMB_Weapons.wav')
 pygame.mixer.music.play(-1)
+
+# load random sound effects
+sound_effects = []
+for sound_file in glob.glob("sound/*.wav"):
+	if 'AMB' not in sound_file:
+		sound_effects.append(pygame.mixer.Sound(sound_file))
 
 
 #function for outputting text onto the screen
@@ -58,8 +66,7 @@ def reset_game():
 	score = 0
 	return score
 
-
-class Bird(pygame.sprite.Sprite):
+class Crewmate(pygame.sprite.Sprite):
 
 	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self)
@@ -67,7 +74,7 @@ class Bird(pygame.sprite.Sprite):
 		self.index = 0
 		self.counter = 0
 		for num in range (1, 4):
-			img = pygame.image.load("img/red.png")
+			img = pygame.image.load("crewmates/red.png")
 			img = pygame.transform.scale(img, (int(screen_width/13), int(screen_height/13)))
 			self.images.append(img)
 		self.image = self.images[self.index]
@@ -106,10 +113,10 @@ class Bird(pygame.sprite.Sprite):
 				self.image = self.images[self.index]
 
 
-			#rotate the bird
+			#rotate the crewmate
 			self.image = pygame.transform.rotate(self.images[self.index], self.vel * -2)
 		else:
-			#point the bird at the ground
+			#point the crewmate at the ground
 			self.image = pygame.transform.rotate(self.images[self.index], -90)
 
 
@@ -119,6 +126,7 @@ class Pipe(pygame.sprite.Sprite):
 	def __init__(self, x, y, position):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.image.load("img/pipe.png")
+		self.image = pygame.transform.scale(self.image, (78, 560))
 		self.rect = self.image.get_rect()
 		#position variable determines if the pipe is coming from the bottom or top
 		#position 1 is from the top, -1 is from the bottom
@@ -161,11 +169,11 @@ class Button():
 
 
 pipe_group = pygame.sprite.Group()
-bird_group = pygame.sprite.Group()
+crewmate_group = pygame.sprite.Group()
 
-flappy = Bird(100, int(screen_height / 2))
+flappy = Crewmate(100, int(screen_height / 2))
 
-bird_group.add(flappy)
+crewmate_group.add(flappy)
 
 #create restart button instance
 button = Button(screen_width // 2 - 50, screen_height // 2 - 100, button_img)
@@ -180,30 +188,36 @@ while run:
 	screen.blit(bg, (0,0))
 
 	pipe_group.draw(screen)
-	bird_group.draw(screen)
-	bird_group.update()
+	crewmate_group.draw(screen)
+	crewmate_group.update()
 
 	#draw and scroll the ground
 	screen.blit(ground_img, (ground_scroll, 768))
 
+	# play random sound effect with probability 1/100
+	if random.randint(1, 200) == 10:
+		random_sound = random.choice(sound_effects)
+		random_sound.play()
+		random_sound.fadeout(100)
+
 	#check the score
 	if len(pipe_group) > 0:
-		if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.left\
-			and bird_group.sprites()[0].rect.right < pipe_group.sprites()[0].rect.right\
+		if crewmate_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.left\
+			and crewmate_group.sprites()[0].rect.right < pipe_group.sprites()[0].rect.right\
 			and pass_pipe == False:
 			pass_pipe = True
 		if pass_pipe == True:
-			if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
+			if crewmate_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
 				score += 1
 				pass_pipe = False
 	draw_text(str(score), font, white, int(screen_width / 2), 20)
 
 
 	#look for collision
-	if pygame.sprite.groupcollide(bird_group, pipe_group, False, False) or flappy.rect.top < 0:
+	if pygame.sprite.groupcollide(crewmate_group, pipe_group, False, False) or flappy.rect.top < 0:
 		game_over = True
 
-	#once the bird has hit the ground it's game over and no longer flying
+	#once the crewmate has hit the ground it's game over and no longer flying
 	if flappy.rect.bottom >= 770:
 		game_over = True
 		flying = False
